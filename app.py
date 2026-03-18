@@ -12,11 +12,25 @@ st.title("🎬 Movie Recommendation System")
 st.write("ระบบแนะนำหนังด้วย Machine Learning")
 
 # โหลดโมเดล
-@st.cache_resource
-def load_model():
-    return joblib.load("movie_recommendation_model.pkl")
+st.title("🎬 Movie Recommendation System")
 
-model = load_model()
+data = pd.read_csv("movie_data_used.csv")
+
+st.write("Choose a movie you like")
+
+movie_list = data["title"].unique()
+
+selected_movie = st.selectbox("Movie", movie_list)
+
+if st.button("Recommend"):
+
+    movie_genre = data[data["title"] == selected_movie]["genres"].values[0]
+
+    recommend = data[data["genres"] == movie_genre]
+
+    st.write("Recommended Movies")
+
+    st.dataframe(recommend[["title","genres"]].head(10))
 
 # โหลด dataset
 @st.cache_data
