@@ -17,6 +17,18 @@ def load_data():
 data = load_data()
 
 # =========================
+# Dataset Info
+# =========================
+
+st.subheader("📊 Dataset Information")
+
+num_users = data["userId"].nunique()
+num_movies = data["movieId"].nunique()
+
+st.write("👤 Total Users:", num_users)
+st.write("🎬 Total Movies:", num_movies)
+
+# =========================
 # วิธีเลือก recommendation
 # =========================
 
@@ -48,7 +60,7 @@ if method == "Select Favorite Movie":
             data["genres"] == movie_genre
         ]
 
-        st.subheader("Recommended Movies")
+        st.subheader("🎬 Recommended Movies")
 
         st.dataframe(
             similar_movies[["title", "genres"]]
@@ -76,11 +88,11 @@ else:
             st.warning("User not found in dataset")
         else:
 
-            favorite_genres = user_movies["genres"].mode()[0]
+            favorite_genre = user_movies["genres"].mode()[0]
 
-            recommend = data[data["genres"] == favorite_genres]
+            recommend = data[data["genres"] == favorite_genre]
 
-            st.subheader("Recommended Movies")
+            st.subheader("🎬 Recommended Movies")
 
             st.dataframe(
                 recommend[["title", "genres"]]
