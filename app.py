@@ -37,20 +37,24 @@ st.write("👤 Total Users:", data["userId"].nunique())
 st.write("🎬 Total Movies:", data["movieId"].nunique())
 
 # =========================
-# Feature Engineering (สำคัญ)
+# Feature Engineering (แก้ครบ)
 # =========================
 
-# สร้าง avg_rating + num_rating
-movie_stats = data.groupby("movieId").agg(
-    avg_rating=("rating", "mean"),
-    num_rating=("rating", "count")
-).reset_index()
-
-# merge เข้า data
-data = data.merge(movie_stats, on="movieId", how="left")
-
-# เอา movie ไม่ซ้ำ
 movies_unique = data.drop_duplicates("movieId").copy()
+
+# ถ้ามี rating → คำนวณจริง
+if "rating" in data.columns:
+    movie_stats = data.groupby("movieId").agg(
+        avg_rating=("rating", "mean"),
+        num_rating=("rating", "count")
+    ).reset_index()
+
+    movies_unique = movies_unique.merge(movie_stats, on="movieId", how="left")
+
+# ถ้าไม่มี rating → ใส่ค่า default
+else:
+    movies_unique["avg_rating"] = 3.5
+    movies_unique["num_rating"] = 100
 
 # =========================
 # เลือกวิธีแนะนำ
@@ -69,8 +73,8 @@ if method == "Enter User ID":
 
     if st.button("Recommend Movies"):
 
-        # เช็ค column ก่อน (กัน error)
         required_cols = ["movieId", "avg_rating", "num_rating"]
+
         if not all(col in movies_unique.columns for col in required_cols):
             st.error("Missing columns for prediction")
         else:
@@ -78,7 +82,7 @@ if method == "Enter User ID":
             X_pred = movies_unique[required_cols].copy()
             X_pred["userId"] = user_id
 
-            # เรียง column ให้ตรงตอน train
+            # เรียง column ให้ตรงกับตอน train
             X_pred = X_pred[[
                 "userId",
                 "movieId",
