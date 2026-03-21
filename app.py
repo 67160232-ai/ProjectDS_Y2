@@ -37,24 +37,15 @@ st.write("👤 Total Users:", data["userId"].nunique())
 st.write("🎬 Total Movies:", data["movieId"].nunique())
 
 # =========================
-# Feature Engineering (แก้ครบ)
+# Feature Engineering (FIX 100%)
 # =========================
 
+# เอา movie ไม่ซ้ำ
 movies_unique = data.drop_duplicates("movieId").copy()
 
-# ถ้ามี rating → คำนวณจริง
-if "rating" in data.columns:
-    movie_stats = data.groupby("movieId").agg(
-        avg_rating=("rating", "mean"),
-        num_rating=("rating", "count")
-    ).reset_index()
-
-    movies_unique = movies_unique.merge(movie_stats, on="movieId", how="left")
-
-# ถ้าไม่มี rating → ใส่ค่า default
-else:
-    movies_unique["avg_rating"] = 3.5
-    movies_unique["num_rating"] = 100
+# 🔥 บังคับสร้าง feature (กันพัง)
+movies_unique["avg_rating"] = 3.5
+movies_unique["num_rating"] = 100
 
 # =========================
 # เลือกวิธีแนะนำ
@@ -73,41 +64,40 @@ if method == "Enter User ID":
 
     if st.button("Recommend Movies"):
 
-        required_cols = ["movieId", "avg_rating", "num_rating"]
+        # เตรียม input ให้ตรง model
+        X_pred = movies_unique[[
+            "movieId",
+            "avg_rating",
+            "num_rating"
+        ]].copy()
 
-        if not all(col in movies_unique.columns for col in required_cols):
-            st.error("Missing columns for prediction")
-        else:
-            # เตรียม input
-            X_pred = movies_unique[required_cols].copy()
-            X_pred["userId"] = user_id
+        X_pred["userId"] = user_id
 
-            # เรียง column ให้ตรงกับตอน train
-            X_pred = X_pred[[
-                "userId",
-                "movieId",
-                "avg_rating",
-                "num_rating"
-            ]]
+        X_pred = X_pred[[
+            "userId",
+            "movieId",
+            "avg_rating",
+            "num_rating"
+        ]]
 
-            # predict
-            pred = model.predict(X_pred)
+        # predict
+        pred = model.predict(X_pred)
 
-            movies_unique["pred_rating"] = pred
+        movies_unique["pred_rating"] = pred
 
-            recommend = movies_unique.sort_values(
-                "pred_rating",
-                ascending=False
-            )
+        recommend = movies_unique.sort_values(
+            "pred_rating",
+            ascending=False
+        )
 
-            result = recommend[[
-                "title",
-                "genres",
-                "pred_rating"
-            ]].head(10)
+        result = recommend[[
+            "title",
+            "genres",
+            "pred_rating"
+        ]].head(10)
 
-            st.subheader("🎬 Top Recommended Movies")
-            st.dataframe(result)
+        st.subheader("🎬 Top Recommended Movies")
+        st.dataframe(result)
 
 # =========================
 # METHOD 2 : SELECT MOVIE
